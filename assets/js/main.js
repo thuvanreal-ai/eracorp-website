@@ -53,7 +53,7 @@ window.ERA_LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycby_u4l400Wy
         return;
       }
       if(button){button.disabled=true;button.textContent='Đang gửi yêu cầu...';}
-      if(feedback)feedback.textContent='ERA đang tiếp nhận thông tin, vui lòng đợi trong giây lát...';
+      if(feedback)feedback.textContent='Đang chuyển yêu cầu đến ERA...';
       const requestId='era-'+Date.now()+'-'+Math.random().toString(36).slice(2);
       payload.request_id=requestId;
       const frame=document.createElement('iframe');
@@ -75,6 +75,7 @@ window.ERA_LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycby_u4l400Wy
       function cleanup(){
         window.removeEventListener('message',onMessage);
         clearTimeout(timeout);
+        clearTimeout(quickNotice);
         transport.remove();
         setTimeout(()=>frame.remove(),1500);
         if(button){button.disabled=false;button.textContent='Gửi yêu cầu tư vấn miễn phí';}
@@ -96,7 +97,6 @@ window.ERA_LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycby_u4l400Wy
         overlay.querySelector('.era-success-close').focus();
       }
       function onMessage(event){
-        if(event.source!==frame.contentWindow)return;
         if(!/^https:\/\/(?:script\.google\.com|script\.googleusercontent\.com|[a-z0-9-]+\.googleusercontent\.com)$/.test(event.origin))return;
         let data=event.data;
         try{if(typeof data==='string')data=JSON.parse(data)}catch{return}
@@ -115,7 +115,8 @@ window.ERA_LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycby_u4l400Wy
         if(finished)return;
         finished=true;cleanup();
         if(feedback)feedback.textContent='Chưa xác nhận được kết quả gửi. Anh/chị vui lòng đợi ít phút và kiểm tra với ERA trước khi gửi lại để tránh trùng thông tin.';
-      },30000);
+      },12000);
+      const quickNotice=setTimeout(()=>{if(!finished&&feedback)feedback.textContent='Yêu cầu đã được chuyển đi. Hệ thống đang xác nhận tiếp nhận; Anh/chị không cần bấm gửi lại.';},2500);
       try{transport.submit()}catch(err){
         if(!finished){finished=true;cleanup();if(feedback)feedback.textContent='Không thể gửi yêu cầu lúc này. Anh/chị vui lòng thử lại sau.';}
       }
