@@ -1,4 +1,5 @@
 /* ERA Corp: shared lead capture and attribution. */
+window.ERA_LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycby_u4l400WyYk6R6_3_a1eNyYezaY0JLdaOvW31W6HqFHmW5sNuuT4Ov2FxbkEeI4i_Vg/exec";
 (function(){
   const KEY='era_attribution_v1';
   const qs=new URLSearchParams(location.search);
