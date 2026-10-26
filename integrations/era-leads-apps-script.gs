@@ -3,11 +3,12 @@ const SPREADSHEET_ID = '1MQzfUY8IYALAcW7DYULRdGcd_FSWCvrLMkH7I1og4MQ';
 function doPost(e) {
   const lock = LockService.getScriptLock();
   try {
-    const d = JSON.parse(e.postData.contents || '{}');
+    const d = JSON.parse((e.parameter && e.parameter.payload) || e.postData.contents || '{}');
+    const requestId = String(d.request_id || '').slice(0,100);
     const phone = String(d.phone || '').replace(/[.\s-]/g, '');
     if (!/^0\d{9}$/.test(phone) || !String(d.name||'').trim() || !String(d.area||'').trim() || d.consent !== 'yes')
-      return respond({ok:false,error:'invalid_input'});
-    if (d.website) return respond({ok:false,error:'spam'});
+      return respond({ok:false,error:'invalid_input'}, requestId);
+    if (d.website) return respond({ok:false,error:'spam'}, requestId);
     lock.waitLock(20000);
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const leads = ss.getSheetByName('KHÁCH HÀNG');
@@ -30,14 +31,17 @@ function doPost(e) {
       safe(d.fbclid),safe(d.first_page),safe(d.landing_page),safe(d.referrer),
       safe(d.property_type),safe(d.size),safe(d.detail),'Có']);
     SpreadsheetApp.flush();
-    return respond({ok:true,lead_id:id});
+    return respond({ok:true,lead_id:id}, requestId);
   } catch (err) {
     console.error(err);
-    return respond({ok:false,error:'server_error'});
+    return respond({ok:false,error:'server_error'}, (typeof requestId !== 'undefined' ? requestId : ''));
   } finally {
     if (lock.hasLock()) lock.releaseLock();
   }
 }
-function respond(v) {
-  return ContentService.createTextOutput(JSON.stringify(v)).setMimeType(ContentService.MimeType.JSON);
+function respond(v, requestId) {
+  // Cross-origin form submissions receive an explicit, verifiable acknowledgement.
+  const message = JSON.stringify({type:'ERA_LEAD_RESULT',request_id:requestId,ok:v.ok===true,lead_id:v.lead_id||'',error:v.error||''}).replace(/</g,'\\u003c');
+  const html = '<!doctype html><html><body><script>window.parent.postMessage('+JSON.stringify(message)+', "*");<\\/script></body></html>';
+  return HtmlService.createHtmlOutput(html).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
