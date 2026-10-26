@@ -42,6 +42,6 @@ function doPost(e) {
 function respond(v, requestId) {
   // Cross-origin form submissions receive an explicit, verifiable acknowledgement.
   const message = JSON.stringify({type:'ERA_LEAD_RESULT',request_id:requestId,ok:v.ok===true,lead_id:v.lead_id||'',error:v.error||''}).replace(/</g,'\\u003c');
-  const html = '<!doctype html><html><body><script>window.parent.postMessage('+JSON.stringify(message)+', "*");<\\/script></body></html>';
+  const html = '<!doctype html><html><body><script>window.parent.postMessage('+JSON.stringify(message)+', "*");</scr'+'ipt></body></html>';
   return HtmlService.createHtmlOutput(html).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
