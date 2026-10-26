@@ -24,7 +24,7 @@ function doPost(e) {
     const details = [d.message,d.detail,d.size ? 'Diện tích: '+d.size : ''].filter(Boolean).join(' | ');
     const service = d.services || d.service || d.detail || '';
     // One row per lead in each tab, same submission order and shared ID in technical tab.
-    leads.appendRow([now,safe(d.name),"'" + phone,safe(service),safe(d.area),safe(details),source,'Mới','','']);
+    leads.appendRow([now,safe(d.name),"'" + phone,safe(service),safe(d.area),safe(details),source,'Mới','','','','','',id]);
     marketing.appendRow([id,now,"'" + phone,first,source,safe(d.utm_source),safe(d.utm_medium),
       safe(d.utm_campaign),safe(d.utm_content),safe(d.utm_term),safe(d.gclid),
       safe(d.fbclid),safe(d.first_page),safe(d.landing_page),safe(d.referrer),
