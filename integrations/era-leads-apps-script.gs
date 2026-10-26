@@ -9,7 +9,7 @@ function doPost(e) {
     if (!/^0\d{9}$/.test(phone) || !String(d.name||'').trim() || !String(d.area||'').trim() || d.consent !== 'yes')
       return respond({ok:false,error:'invalid_input'}, requestId);
     if (d.website) return respond({ok:false,error:'spam'}, requestId);
-    lock.waitLock(20000);
+    lock.waitLock(5000);
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const leads = ss.getSheetByName('KHÁCH HÀNG');
     const marketing = ss.getSheetByName('DỮ LIỆU MARKETING');
@@ -30,7 +30,6 @@ function doPost(e) {
       safe(d.utm_campaign),safe(d.utm_content),safe(d.utm_term),safe(d.gclid),
       safe(d.fbclid),safe(d.first_page),safe(d.landing_page),safe(d.referrer),
       safe(d.property_type),safe(d.size),safe(d.detail),'Có']);
-    SpreadsheetApp.flush();
     return respond({ok:true,lead_id:id}, requestId);
   } catch (err) {
     console.error(err);
