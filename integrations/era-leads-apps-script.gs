@@ -9,8 +9,8 @@ function doPost(e) {
   const lock = LockService.getScriptLock();
   try {
     const d = JSON.parse(e.postData.contents || '{}');
-    const phone = String(d.phone || '').replace(/[.\\s-]/g, '');
-    if (!/^0\\d{9}$/.test(phone)) return response_({ok:false,error:'invalid_phone'});
+    const phone = String(d.phone || '').replace(/[.\s-]/g, '');
+    if (!/^0\d{9}$/.test(phone)) return response_({ok:false,error:'invalid_phone'});
     if (!String(d.name||'').trim() || !String(d.area||'').trim() || d.consent !== 'yes')
       return response_({ok:false,error:'missing_required'});
     if (d.website) return response_({ok:false,error:'spam'});
@@ -20,7 +20,7 @@ function doPost(e) {
     const id = Utilities.getUuid();
     const safe = v => {
       const s = String(v == null ? '' : v).slice(0,1500);
-      return /^[=+@\\-]/.test(s) ? "'" + s : s;
+      return /^[=+@\-]/.test(s) ? "'" + s : s;
     };
     sh.appendRow([
       new Date(), id, safe(d.name), "'" + phone, safe(d.services||d.service),
