@@ -1,44 +1,43 @@
-/**
- * ERA Corp lead receiver — Google Apps Script Web App.
- * Deploy: Execute as Me; Who has access: Anyone.
- * Spreadsheet: ERA CORP - LEAD KHÁCH HÀNG / LEAD ERA CORP.
- */
+/** ERA Corp lead receiver. Deploy as Web App (Execute as Me, Anyone). */
 const SPREADSHEET_ID = '1MQzfUY8IYALAcW7DYULRdGcd_FSWCvrLMkH7I1og4MQ';
-const SHEET_NAME = 'LEAD ERA CORP';
 function doPost(e) {
   const lock = LockService.getScriptLock();
   try {
     const d = JSON.parse(e.postData.contents || '{}');
     const phone = String(d.phone || '').replace(/[.\s-]/g, '');
-    if (!/^0\d{9}$/.test(phone)) return response_({ok:false,error:'invalid_phone'});
-    if (!String(d.name||'').trim() || !String(d.area||'').trim() || d.consent !== 'yes')
-      return response_({ok:false,error:'missing_required'});
-    if (d.website) return response_({ok:false,error:'spam'});
-    lock.waitLock(15000);
-    const sh = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
-    if (!sh) throw Error('Missing tab: ' + SHEET_NAME);
-    const id = Utilities.getUuid();
+    if (!/^0\d{9}$/.test(phone) || !String(d.name||'').trim() || !String(d.area||'').trim() || d.consent !== 'yes')
+      return respond({ok:false,error:'invalid_input'});
+    if (d.website) return respond({ok:false,error:'spam'});
+    lock.waitLock(20000);
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const leads = ss.getSheetByName('KHÁCH HÀNG');
+    const marketing = ss.getSheetByName('DỮ LIỆU MARKETING');
+    if (!leads || !marketing) throw Error('Missing destination tabs');
     const safe = v => {
       const s = String(v == null ? '' : v).slice(0,1500);
-      return /^[=+@\-]/.test(s) ? "'" + s : s;
+      return /^[=+@-]/.test(s) ? "'" + s : s;
     };
-    sh.appendRow([
-      new Date(), id, safe(d.name), "'" + phone, safe(d.services||d.service),
-      safe(d.property_type), safe(d.area), safe(d.size), safe(d.detail),
-      safe(d.message), safe(d.landing_page), safe(d.page_url),
-      safe(d.utm_source), safe(d.utm_medium), safe(d.utm_campaign),
-      safe(d.utm_content), safe(d.utm_term), safe(d.gclid),
-      'Mới', '', '', '', 'Có'
-    ]);
+    const id = Utilities.getUuid();
+    const source = safe(d.attribution_source || 'Chưa xác định');
+    const first = safe(d.first_touch_source || source);
+    const now = new Date();
+    const details = [d.message,d.detail,d.size ? 'Diện tích: '+d.size : ''].filter(Boolean).join(' | ');
+    const service = d.services || d.service || d.detail || '';
+    // One row per lead in each tab, same submission order and shared ID in technical tab.
+    leads.appendRow([now,safe(d.name),"'" + phone,safe(service),safe(d.area),safe(details),source,'Mới','','']);
+    marketing.appendRow([id,now,"'" + phone,first,source,safe(d.utm_source),safe(d.utm_medium),
+      safe(d.utm_campaign),safe(d.utm_content),safe(d.utm_term),safe(d.gclid),
+      safe(d.fbclid),safe(d.first_page),safe(d.landing_page),safe(d.referrer),
+      safe(d.property_type),safe(d.size),safe(d.detail),'Có']);
     SpreadsheetApp.flush();
-    return response_({ok:true,lead_id:id});
-  } catch(err) {
+    return respond({ok:true,lead_id:id});
+  } catch (err) {
     console.error(err);
-    return response_({ok:false,error:'server_error'});
+    return respond({ok:false,error:'server_error'});
   } finally {
     if (lock.hasLock()) lock.releaseLock();
   }
 }
-function response_(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+function respond(v) {
+  return ContentService.createTextOutput(JSON.stringify(v)).setMimeType(ContentService.MimeType.JSON);
 }
