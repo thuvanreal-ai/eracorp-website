@@ -47,7 +47,6 @@
       if(!/^0[0-9]{9}$/.test(phone)){const el=form.querySelector('[name=phone]');el.setCustomValidity('Nhập 10 chữ số bắt đầu bằng 0.');form.reportValidity();el.setCustomValidity('');return}
       const last=stored.last||touch,first=stored.first||touch;
       const payload={...d,phone,consent:'yes',services:service,service,attribution_source:last.attribution_source,first_touch_source:first.attribution_source,utm_source:last.utm_source,utm_medium:last.utm_medium,utm_campaign:last.utm_campaign,utm_content:last.utm_content,utm_term:last.utm_term,gclid:last.gclid,fbclid:last.fbclid,referrer:first.referrer,first_page:first.first_page,landing_page:location.pathname,page_url:location.href,submitted_at:new Date().toISOString()};
-      const msg=['YÊU CẦU TƯ VẤN ERA CORP','Họ tên: '+d.name,'Điện thoại: '+phone,'Dịch vụ: '+service,'Khu vực: '+d.area,'Loại công trình: '+(d.property_type||'Chưa xác định'),'Hạng mục: '+(d.detail||'Chưa xác định'),'Diện tích: '+(d.size||'Chưa rõ'),'Hiện trạng: '+(d.message||'Chưa mô tả')].join('\n');
       if(button)button.disabled=true;
       const endpoint=window.ERA_LEADS_ENDPOINT;
       let confirmed=false;
@@ -60,26 +59,15 @@
           confirmed=true;
           window.dataLayer=window.dataLayer||[];
           window.dataLayer.push({event:'form_submit_success',lead_id:data.lead_id||'',service,source:last.attribution_source});
-          if(feedback)feedback.textContent='ERA đã nhận được yêu cầu. Chúng tôi sẽ liên hệ Anh/chị sớm!';
-          if(handoff)handoff.hidden=true;
-          if(output)output.hidden=true;
+          if(feedback)feedback.textContent='ERA đã nhận được yêu cầu! Chúng tôi sẽ liên hệ Anh/chị để tư vấn sớm.';
           form.reset();
-        }catch(err){if(feedback)feedback.textContent='Chưa xác nhận được việc gửi tự động. Anh/chị vui lòng gửi nội dung qua Zalo bên dưới.'}
-      }else if(feedback)feedback.textContent='Hệ thống đang hoàn thiện kết nối. Anh/chị vui lòng gửi yêu cầu qua Zalo bên dưới.';
-      if(!confirmed){
-        if(handoff){handoff.hidden=false;const t=handoff.querySelector('[data-handoff-text]');if(t)t.value=msg}
-        if(output){output.textContent=msg;output.hidden=false;output.classList.add('active','is-visible')}
-        if(copy){copy.hidden=false;copy.classList.add('active','is-visible')}
-        window.dataLayer=window.dataLayer||[];
-        window.dataLayer.push({event:'lead_handoff_ready',service});
-        (handoff||output)?.scrollIntoView({behavior:'smooth',block:'nearest'});
-      }
+        }catch(err){
+          if(feedback)feedback.textContent='Yêu cầu chưa gửi thành công. Anh/chị vui lòng kiểm tra kết nối mạng và thử lại sau ít phút.';
+        }
+      }else if(feedback)feedback.textContent='Hệ thống tiếp nhận yêu cầu đang được kết nối. Anh/chị vui lòng quay lại sau.';
       if(button)button.disabled=false;
     });
-    copy?.addEventListener('click',async()=>{
-      const msg=handoff?.querySelector('[data-handoff-text]')?.value||output?.textContent||'';
-      try{await navigator.clipboard.writeText(msg);copy.textContent='Đã sao chép'}catch{if(output){const range=document.createRange();range.selectNodeContents(output);const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range)}else{const ta=handoff?.querySelector('[data-handoff-text]');ta?.focus();ta?.select()}copy.textContent='Hãy sao chép phần đã chọn'}
-    });
+
   });
 })();
 (function(){const toggle=document.querySelector('.menu-toggle');const menu=document.getElementById('era-navigation');if(toggle&&menu){toggle.addEventListener('click',()=>{const open=menu.classList.toggle('is-open');toggle.setAttribute('aria-expanded',String(open));toggle.setAttribute('aria-label',open?'Đóng menu':'Mở menu');toggle.textContent=open?'✕':'☰'});menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{menu.classList.remove('is-open');toggle.setAttribute('aria-expanded','false');toggle.textContent='☰'}))}document.querySelectorAll('[data-contact]').forEach(a=>a.addEventListener('click',()=>{window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:'contact_click',contact_method:a.dataset.contact})}))})();
